@@ -45,6 +45,23 @@ namespace ZhuZhuBot.DbModels
             SchoolAppCookieUpdateTime = DateTime.Now;
         }
 
+        public CpdailyLoginResult()
+        {
+
+        }
+
+        public CpdailyLoginResult(LoginResult loginResult)
+        {
+            AuthId = loginResult.AuthId;
+            Name = loginResult.Name;
+            OpenId = loginResult.OpenId;
+            PersonId = loginResult.PersonId;
+            SessionToken = loginResult.SessionToken;
+            TenantId = loginResult.TenantId;
+            Tgc = loginResult.Tgc;
+            UserId = loginResult.UserId;
+        }
+
         public LoginResult ToLoginResult()
         {
             return new LoginResult()

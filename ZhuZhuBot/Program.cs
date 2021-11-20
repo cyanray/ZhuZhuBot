@@ -112,13 +112,86 @@ namespace ZhuZhuBot
                         }
                         else
                         {
+                            var user = Constants.AppDbContext.Users
+                                    .Where(u => u.QId == x.GetQQ())
+                                    .Include(u => u.CpdailyLoginResult)
+                                    .FirstOrDefault();
+                            if (user is null)
+                            {
+                                Constants.AppDbContext.Users.Add(new User()
+                                {
+                                    QId = x.GetQQ(),
+                                    CpdailyLoginResult = login_result
+                                });
+                            }
+                            else
+                            {
+                                user.CpdailyLoginResult = login_result;
+                            }
+                            await Constants.AppDbContext.SaveChangesAsync();
+                        }
+                        await x.Reply("登录成功!");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, Constants.UnexpectedError);
+                    }
+                });
+
+            bot.MessageReceived
+                .OfType<MessageReceiverBase>()
+                .Subscribe(async x =>
+                {
+                    try
+                    {
+                        var msg_str = x.MessageChain.GetAllPlainText();
+                        if (string.IsNullOrEmpty(msg_str)) return;
+                        var match = Regex.Match(msg_str, @"今日校园[ ]*登录[ ]*(1(3\d|4[5-9]|5[0-35-9]|6[2567]|7[0-8]|8\d|9[0-35-9])\d{8})[ ]*([\d]+)?");
+                        if (!match.Success) return;
+                        if (match.Length > 3) return;
+                        var phone = match.Groups[1].Value;
+                        if (string.IsNullOrEmpty(phone)) return;
+                        await Constants.CpdailyClient.MobileLoginAsync(phone, Constants.SecretKey);
+                        await x.Reply("已经发送短信验证码，请回复：“今日校园 登录 手机号码 验证码”，进行验证。");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, Constants.UnexpectedError);
+                    }
+                });
+
+            bot.MessageReceived
+                .OfType<MessageReceiverBase>()
+                .Subscribe(async x =>
+                {
+                    try
+                    {
+                        var msg_str = x.MessageChain.GetAllPlainText();
+                        if (string.IsNullOrEmpty(msg_str)) return;
+                        var match = Regex.Match(msg_str, @"今日校园[ ]*登录[ ]*(1(3\d|4[5-9]|5[0-35-9]|6[2567]|7[0-8]|8\d|9[0-35-9])\d{8})[ ]*([\d]+)");
+                        if (!match.Success) return;
+                        var phone = match.Groups[1].Value;
+                        var code = match.Groups[3].Value;
+                        if (string.IsNullOrEmpty(phone)) return;
+                        var login_result = await Constants.CpdailyClient.MobileLoginAsync(phone, code, Constants.SecretKey);
+                        
+                        var user = Constants.AppDbContext.Users
+                            .Where(u => u.QId == x.GetQQ())
+                            .Include(u => u.CpdailyLoginResult)
+                            .FirstOrDefault();
+                        if (user is null)
+                        {
                             Constants.AppDbContext.Users.Add(new User()
                             {
                                 QId = x.GetQQ(),
-                                CpdailyLoginResult = login_result
+                                CpdailyLoginResult = new CpdailyLoginResult(login_result)
                             });
-                            await Constants.AppDbContext.SaveChangesAsync();
                         }
+                        else
+                        {
+                            user.CpdailyLoginResult = new CpdailyLoginResult(login_result);
+                        }
+                        await Constants.AppDbContext.SaveChangesAsync();
                         await x.Reply("登录成功!");
                     }
                     catch (Exception ex)
