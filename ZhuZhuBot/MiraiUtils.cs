@@ -49,6 +49,17 @@ namespace ZhuZhuBot
             };
         }
 
+        public static string GetQQ(this MessageReceiverBase m)
+        {
+            return m switch
+            {
+                FriendMessageReceiver f => f.Sender.Id,
+                GroupMessageReceiver g => g.Sender.Id,
+                TempMessageReceiver t => t.Sender.Id,
+                _ => throw new NotImplementedException($"对 {m.Type} 的 GetQQ 方法尚未实现!"),
+            };
+        }
+
         public static Task<string> Reply(this FriendMessageReceiver m, string message) => m.Reply(new PlainMessage(message));
 
         public static Task<string> Reply(this GroupMessageReceiver m, string message) => m.Reply(new PlainMessage(message));

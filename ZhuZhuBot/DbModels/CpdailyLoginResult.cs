@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Cpdaily.CpdailyModels;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,10 +38,27 @@ namespace ZhuZhuBot.DbModels
         /// </summary>
         public DateTime? SchoolAppCookieUpdateTime { get; set; } = null;
 
+        [MemberNotNull(nameof(SchoolAppCookie), nameof(SchoolAppCookieUpdateTime))]
         public void UpdateSchoolAppCookie(string cookie)
         {
             SchoolAppCookie = cookie;
             SchoolAppCookieUpdateTime = DateTime.Now;
         }
+
+        public LoginResult ToLoginResult()
+        {
+            return new LoginResult()
+            {
+                AuthId = AuthId,
+                Name = Name,
+                OpenId = OpenId,
+                PersonId = PersonId,
+                SessionToken = SessionToken,
+                TenantId = TenantId,
+                Tgc = Tgc,
+                UserId = UserId
+            };
+        }
+
     }
 }
