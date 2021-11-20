@@ -1,0 +1,6 @@
+[submodule "CpdailyClient"]
+	path = CpdailyClient
+	url = https://github.com/cyanray/CpdailyClient
+[submodule "Mirai.Net"]
+	path = Mirai.Net
+	url = https://github.com/cyanray/Mirai.Net
