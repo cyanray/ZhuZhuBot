@@ -68,5 +68,40 @@ namespace ZhuZhuBot
 
         public static Task<string> Reply(this MessageReceiverBase m, string message) => m.Reply(new PlainMessage(message));
 
+        public static async void TryReply(this FriendMessageReceiver m, string message)
+        {
+            try
+            {
+                await m.Reply(new PlainMessage(message));
+            }
+            catch { }
+        }
+        public static async void TryReply(this GroupMessageReceiver m, string message)
+        {
+            try
+            {
+                await m.Reply(new PlainMessage(message));
+            }
+            catch { }
+        }
+
+        public static async void TryReply(this TempMessageReceiver m, string message)
+        {
+            try
+            {
+                await m.Reply(new PlainMessage(message));
+            }
+            catch { }
+        }
+
+        public static async void TryReply(this MessageReceiverBase m, string message)
+        {
+            try
+            {
+                await m.Reply(new PlainMessage(message));
+            }
+            catch { }
+        }
+
     }
 }

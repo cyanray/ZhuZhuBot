@@ -16,6 +16,7 @@ using ZhuZhuBot.Models;
 using ZhuZhuBot.DbModels;
 using Cqjtu = Cpdaily.SchoolServices.Cqjtu;
 using Cpdaily.SchoolServices.Cqjtu.NetPay;
+using Cpdaily.SchoolServices.Cqjtu.Library;
 
 namespace ZhuZhuBot
 {
@@ -134,6 +135,7 @@ namespace ZhuZhuBot
                     }
                     catch (Exception ex)
                     {
+                        x.TryReply(ex.Message);
                         Log.Error(ex, Constants.UnexpectedError);
                     }
                 });
@@ -148,7 +150,7 @@ namespace ZhuZhuBot
                         if (string.IsNullOrEmpty(msg_str)) return;
                         var match = Regex.Match(msg_str, @"今日校园[ ]*登录[ ]*(1(3\d|4[5-9]|5[0-35-9]|6[2567]|7[0-8]|8\d|9[0-35-9])\d{8})[ ]*([\d]+)?");
                         if (!match.Success) return;
-                        if (match.Length > 3) return;
+                        if (match.Groups[3].Success) return;
                         var phone = match.Groups[1].Value;
                         if (string.IsNullOrEmpty(phone)) return;
                         await Constants.CpdailyClient.MobileLoginAsync(phone, Constants.SecretKey);
@@ -156,6 +158,7 @@ namespace ZhuZhuBot
                     }
                     catch (Exception ex)
                     {
+                        x.TryReply(ex.Message);
                         Log.Error(ex, Constants.UnexpectedError);
                     }
                 });
@@ -196,6 +199,7 @@ namespace ZhuZhuBot
                     }
                     catch (Exception ex)
                     {
+                        x.TryReply(ex.Message);
                         Log.Error(ex, Constants.UnexpectedError);
                     }
                 });
@@ -222,11 +226,12 @@ namespace ZhuZhuBot
                         var user_info = await Constants.CpdailyClient.GetUserInfoAsync(user.CpdailyLoginResult.ToLoginResult());
                         if (user_info is not null)
                         {
-                            await x.Reply(JsonConvert.SerializeObject(user_info));
+                            await x.Reply($"你好，{user_info.Name}！");
                         }
                     }
                     catch (Exception ex)
                     {
+                        x.TryReply(ex.Message);
                         Log.Error(ex, Constants.UnexpectedError);
                     }
                 });
@@ -263,6 +268,108 @@ namespace ZhuZhuBot
                     }
                     catch (Exception ex)
                     {
+                        x.TryReply(ex.Message);
+                        Log.Error(ex, Constants.UnexpectedError);
+                    }
+                });
+
+            bot.MessageReceived
+                .OfType<MessageReceiverBase>()
+                .Subscribe(async x =>
+                {
+                    try
+                    {
+                        var msg_str = x.MessageChain.GetAllPlainText();
+                        if (string.IsNullOrEmpty(msg_str)) return;
+                        if (msg_str != "图书馆" && msg_str != "我的预约") return;
+                        var user = Constants.AppDbContext.Users
+                                .Where(u => u.QId == x.GetQQ())
+                                .Include(u => u.CpdailyLoginResult)
+                                .FirstOrDefault();
+                        if (user is null || user.CpdailyLoginResult is null)
+                        {
+                            await x.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
+                            return;
+                        }
+                        if (user.CpdailyLoginResult.SchoolAppCookie is null)
+                        {
+                            var cookie = await Constants.CpdailyClient.UserStoreAppListAsync(
+                                    user.CpdailyLoginResult.ToLoginResult(), Constants.SchoolDetails);
+                            user.CpdailyLoginResult.UpdateSchoolAppCookie(cookie);
+                            await Constants.AppDbContext.SaveChangesAsync();
+                        }
+                        var library = new CpdailyLibrary();
+                        var lib_cookie = await library.LoginAsync(user.CpdailyLoginResult.SchoolAppCookie);
+                        var logs =  await library.GetReservationsAsync(lib_cookie);
+                        if (logs.Count != 0)
+                        {
+                            await x.Reply(logs.Select(x => new PlainMessage($"{x.Id}. {x.LibraryName}, {x.Date:yyyy-MM-dd}"))
+                                              .Select(x => (MessageBase)x)
+                                              .ToArray());
+                        }
+                        else
+                        {
+                            await x.Reply("没有找到图书馆预约记录！");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        x.TryReply(ex.Message);
+                        Log.Error(ex, Constants.UnexpectedError);
+                    }
+                });
+
+            bot.MessageReceived
+                .OfType<MessageReceiverBase>()
+                .Subscribe(async x =>
+                {
+                    try
+                    {
+                        var msg_str = x.MessageChain.GetAllPlainText();
+                        if (string.IsNullOrEmpty(msg_str)) return;
+                        var match = Regex.Match(msg_str, @"预约图书馆[ ]*(南岸|双福)(馆)?");
+                        if (!match.Success) return;
+                        var lib_name = match.Groups[1].Value;
+
+                        var user = Constants.AppDbContext.Users
+                                .Where(u => u.QId == x.GetQQ())
+                                .Include(u => u.CpdailyLoginResult)
+                                .FirstOrDefault();
+                        if (user is null || user.CpdailyLoginResult is null)
+                        {
+                            await x.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
+                            return;
+                        }
+                        if (user.CpdailyLoginResult.SchoolAppCookie is null)
+                        {
+                            var cookie = await Constants.CpdailyClient.UserStoreAppListAsync(
+                                    user.CpdailyLoginResult.ToLoginResult(), Constants.SchoolDetails);
+                            user.CpdailyLoginResult.UpdateSchoolAppCookie(cookie);
+                            await Constants.AppDbContext.SaveChangesAsync();
+                        }
+                        var library = new CpdailyLibrary();
+                        var lib_cookie = await library.LoginAsync(user.CpdailyLoginResult.SchoolAppCookie);
+                        var date = DateTime.Now;
+                        if(msg_str.Contains("明天"))
+                        {
+                            date = DateTime.Now.AddDays(1);
+                        }
+                        await library.ReserveAsync(lib_cookie, $"{lib_name}馆", date);
+                        var logs = await library.GetReservationsAsync(lib_cookie);
+                        if (logs.Count != 0)
+                        {
+                            await x.Reply(logs.Select(x => new PlainMessage($"{x.Id}. {x.LibraryName}, {x.Date:yyyy-MM-dd}"))
+                                              .Select(x => (MessageBase)x)
+                                              .ToArray());
+                        }
+                        else
+                        {
+                            await x.Reply("没有找到图书馆预约记录！");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        x.TryReply(ex.Message);
                         Log.Error(ex, Constants.UnexpectedError);
                     }
                 });
