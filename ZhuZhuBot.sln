@@ -5,6 +5,10 @@ VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZhuZhuBot", "ZhuZhuBot\ZhuZhuBot.csproj", "{A9DC05A9-DD19-419B-BBDA-00658CDCBA38}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mirai.Net", "Mirai.Net\Mirai.Net\Mirai.Net.csproj", "{B1D10B00-B7D0-4379-932B-E6289C2BCE51}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CpdailyClient", "CpdailyClient\CpdailyClient\CpdailyClient.csproj", "{8EA08FA2-B6FC-4C05-95DC-F81AB7DB91BE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{A9DC05A9-DD19-419B-BBDA-00658CDCBA38}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9DC05A9-DD19-419B-BBDA-00658CDCBA38}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9DC05A9-DD19-419B-BBDA-00658CDCBA38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1D10B00-B7D0-4379-932B-E6289C2BCE51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1D10B00-B7D0-4379-932B-E6289C2BCE51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1D10B00-B7D0-4379-932B-E6289C2BCE51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1D10B00-B7D0-4379-932B-E6289C2BCE51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EA08FA2-B6FC-4C05-95DC-F81AB7DB91BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EA08FA2-B6FC-4C05-95DC-F81AB7DB91BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EA08FA2-B6FC-4C05-95DC-F81AB7DB91BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EA08FA2-B6FC-4C05-95DC-F81AB7DB91BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
