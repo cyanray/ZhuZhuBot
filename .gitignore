@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/ZhuZhuBot/Properties/launchSettings.json
+/ZhuZhuBot/zzbot.db
+/ZhuZhuBot/zzbot.db-shm
+/ZhuZhuBot/zzbot.db-wal
