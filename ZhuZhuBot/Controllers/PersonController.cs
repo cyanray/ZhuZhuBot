@@ -68,7 +68,7 @@ namespace ZhuZhuBot.Controllers
                 var payClient = new NetPay();
                 var pay_cookie = await payClient.LoginAsync(user.CpdailyLoginResult.SchoolAppCookie);
                 var info = await payClient.GetAccountInfoAsync(pay_cookie);
-                await m.Reply($"你的一卡通余额：￥{info.RemainingAmount} (待充值: ￥{info.UnaccountedAmount})");
+                await m.Reply($"你的一卡通余额：￥{info.RemainingAmount} (待圈存: ￥{info.UnaccountedAmount})");
             }
             catch (Exception ex)
             {
