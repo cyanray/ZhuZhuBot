@@ -31,5 +31,12 @@ namespace ZhuZhuBot.DbModels
         /// 今日校园登录状态
         /// </summary>
         public CpdailyLoginResult? CpdailyLoginResult { get; set; }
+
+
+        [MemberNotNullWhen(true, member: nameof(CpdailyLoginResult))]
+        public bool HasLoginResult 
+        {
+            get => CpdailyLoginResult is not null; 
+        }
     }
 }

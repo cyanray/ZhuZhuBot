@@ -22,21 +22,18 @@ namespace ZhuZhuBot.Controllers
                 var msg_str = m.MessageChain.GetAllPlainText();
                 if (string.IsNullOrEmpty(msg_str)) return;
                 if (msg_str != "图书馆" && msg_str != "我的预约") return;
-                var user = Constants.AppDbContext.Users
-                        .Where(u => u.QId == m.GetQQ())
-                        .Include(u => u.CpdailyLoginResult)
-                        .FirstOrDefault();
-                if (user is null || user.CpdailyLoginResult is null)
+                DbModels.User? user = AppShared.AppDbContext.GetUserByQQ(m.GetSenderQQ());
+                if (user is null || !user.HasLoginResult)
                 {
-                    await m.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
+                    await m.Reply(AppShared.NotLoginMessage);
                     return;
                 }
                 if (user.CpdailyLoginResult.SchoolAppCookie is null)
                 {
-                    var cookie = await Constants.CpdailyClient.UserStoreAppListAsync(
-                            user.CpdailyLoginResult.ToLoginResult(), Constants.SchoolDetails);
+                    var cookie = await AppShared.CpdailyClient.UserStoreAppListAsync(
+                            user.CpdailyLoginResult.ToLoginResult(), AppShared.SchoolDetails);
                     user.CpdailyLoginResult.UpdateSchoolAppCookie(cookie);
-                    await Constants.AppDbContext.SaveChangesAsync();
+                    await AppShared.AppDbContext.SaveChangesAsync();
                 }
                 var library = new CpdailyLibrary();
                 var lib_cookie = await library.LoginAsync(user.CpdailyLoginResult.SchoolAppCookie);
@@ -55,7 +52,7 @@ namespace ZhuZhuBot.Controllers
             catch (Exception ex)
             {
                 m.TryReply(ex.Message);
-                Log.Error(ex, Constants.UnexpectedError);
+                Log.Error(ex, AppShared.UnexpectedError);
             }
 
         }
@@ -71,21 +68,18 @@ namespace ZhuZhuBot.Controllers
                 if (!match.Success) return;
                 var lib_name = match.Groups[1].Value;
 
-                var user = Constants.AppDbContext.Users
-                        .Where(u => u.QId == m.GetQQ())
-                        .Include(u => u.CpdailyLoginResult)
-                        .FirstOrDefault();
-                if (user is null || user.CpdailyLoginResult is null)
+                var user = AppShared.AppDbContext.GetUserByQQ(m.GetSenderQQ());
+                if (user is null || !user.HasLoginResult)
                 {
-                    await m.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
+                    await m.Reply(AppShared.NotLoginMessage);
                     return;
                 }
                 if (user.CpdailyLoginResult.SchoolAppCookie is null)
                 {
-                    var cookie = await Constants.CpdailyClient.UserStoreAppListAsync(
-                            user.CpdailyLoginResult.ToLoginResult(), Constants.SchoolDetails);
+                    var cookie = await AppShared.CpdailyClient.UserStoreAppListAsync(
+                            user.CpdailyLoginResult.ToLoginResult(), AppShared.SchoolDetails);
                     user.CpdailyLoginResult.UpdateSchoolAppCookie(cookie);
-                    await Constants.AppDbContext.SaveChangesAsync();
+                    await AppShared.AppDbContext.SaveChangesAsync();
                 }
                 var library = new CpdailyLibrary();
                 var lib_cookie = await library.LoginAsync(user.CpdailyLoginResult.SchoolAppCookie);
@@ -110,7 +104,7 @@ namespace ZhuZhuBot.Controllers
             catch (Exception ex)
             {
                 m.TryReply(ex.Message);
-                Log.Error(ex, Constants.UnexpectedError);
+                Log.Error(ex, AppShared.UnexpectedError);
             }
 
         }

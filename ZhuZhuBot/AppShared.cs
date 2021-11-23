@@ -10,13 +10,15 @@ using ZhuZhuBot.Models;
 
 namespace ZhuZhuBot
 {
-    internal class Constants
+    internal class AppShared
     {
         public const string ConfigFilePath = "config.json";
 
         public const string DatabaseFilePath = "zzbot.db";
 
         public const string UnexpectedError = "Unexpected error.";
+
+        public const string NotLoginMessage = "你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！";
 
         [NotNull]
         public static AppConfig? AppConfig { get; set; }

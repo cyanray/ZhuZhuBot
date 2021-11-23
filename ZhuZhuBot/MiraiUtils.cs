@@ -53,14 +53,14 @@ namespace ZhuZhuBot
             };
         }
 
-        public static string GetQQ(this MessageReceiverBase m)
+        public static string GetSenderQQ(this MessageReceiverBase m)
         {
             return m switch
             {
                 FriendMessageReceiver f => f.Sender.Id,
                 GroupMessageReceiver g => g.Sender.Id,
                 TempMessageReceiver t => t.Sender.Id,
-                _ => throw new NotImplementedException($"对 {m.Type} 的 GetQQ 方法尚未实现!"),
+                _ => throw new NotImplementedException($"对 {m.Type} 的 GetSenderQQ 方法尚未实现!"),
             };
         }
 
@@ -80,6 +80,7 @@ namespace ZhuZhuBot
             }
             catch { }
         }
+        
         public static async void TryReply(this GroupMessageReceiver m, string message)
         {
             try

@@ -20,17 +20,17 @@ namespace ZhuZhuBot.Controllers
                 var msg_str = m.MessageChain.GetAllPlainText();
                 if (string.IsNullOrEmpty(msg_str)) return;
                 if (msg_str != "个人信息" && msg_str != "你好") return;
-                var user = Constants.AppDbContext.Users
+                var user = AppShared.AppDbContext.Users
                         .AsNoTracking()
-                        .Where(u => u.QId == m.GetQQ())
+                        .Where(u => u.QId == m.GetSenderQQ())
                         .Include(u => u.CpdailyLoginResult)
                         .FirstOrDefault();
-                if (user is null || user.CpdailyLoginResult is null)
+                if (user is null || !user.HasLoginResult)
                 {
-                    await m.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
+                    await m.Reply(AppShared.NotLoginMessage);
                     return;
                 }
-                var user_info = await Constants.CpdailyClient.GetUserInfoAsync(user.CpdailyLoginResult.ToLoginResult());
+                var user_info = await AppShared.CpdailyClient.GetUserInfoAsync(user.CpdailyLoginResult.ToLoginResult());
                 if (user_info is not null)
                 {
                     await m.Reply($"你好，{user_info.Name}！");
@@ -39,7 +39,7 @@ namespace ZhuZhuBot.Controllers
             catch (Exception ex)
             {
                 m.TryReply(ex.Message);
-                Log.Error(ex, Constants.UnexpectedError);
+                Log.Error(ex, AppShared.UnexpectedError);
             }
 
         }
@@ -52,21 +52,18 @@ namespace ZhuZhuBot.Controllers
                 var msg_str = m.MessageChain.GetAllPlainText();
                 if (string.IsNullOrEmpty(msg_str)) return;
                 if (msg_str != "余额" && msg_str != "一卡通" && msg_str != "一卡通余额") return;
-                var user = Constants.AppDbContext.Users
-                        .Where(u => u.QId == m.GetQQ())
-                        .Include(u => u.CpdailyLoginResult)
-                        .FirstOrDefault();
-                if (user is null || user.CpdailyLoginResult is null)
+                var user = AppShared.AppDbContext.GetUserByQQ(m.GetSenderQQ());
+                if (user is null || !user.HasLoginResult)
                 {
-                    await m.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
+                    await m.Reply(AppShared.NotLoginMessage);
                     return;
                 }
                 if (user.CpdailyLoginResult.SchoolAppCookie is null)
                 {
-                    var cookie = await Constants.CpdailyClient.UserStoreAppListAsync(
-                            user.CpdailyLoginResult.ToLoginResult(), Constants.SchoolDetails);
+                    var cookie = await AppShared.CpdailyClient.UserStoreAppListAsync(
+                            user.CpdailyLoginResult.ToLoginResult(), AppShared.SchoolDetails);
                     user.CpdailyLoginResult.UpdateSchoolAppCookie(cookie);
-                    await Constants.AppDbContext.SaveChangesAsync();
+                    await AppShared.AppDbContext.SaveChangesAsync();
                 }
                 var payClient = new NetPay();
                 var pay_cookie = await payClient.LoginAsync(user.CpdailyLoginResult.SchoolAppCookie);
@@ -76,7 +73,7 @@ namespace ZhuZhuBot.Controllers
             catch (Exception ex)
             {
                 m.TryReply(ex.Message);
-                Log.Error(ex, Constants.UnexpectedError);
+                Log.Error(ex, AppShared.UnexpectedError);
             }
 
         }

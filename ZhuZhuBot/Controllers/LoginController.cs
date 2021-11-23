@@ -32,15 +32,12 @@ namespace ZhuZhuBot.Controllers
                 }
                 else
                 {
-                    var user = Constants.AppDbContext.Users
-                            .Where(u => u.QId == m.GetQQ())
-                            .Include(u => u.CpdailyLoginResult)
-                            .FirstOrDefault();
+                    var user = AppShared.AppDbContext.GetUserByQQ(m.GetSenderQQ());
                     if (user is null)
                     {
-                        Constants.AppDbContext.Users.Add(new User()
+                        AppShared.AppDbContext.Users.Add(new User()
                         {
-                            QId = m.GetQQ(),
+                            QId = m.GetSenderQQ(),
                             CpdailyLoginResult = login_result
                         });
                     }
@@ -48,14 +45,14 @@ namespace ZhuZhuBot.Controllers
                     {
                         user.CpdailyLoginResult = login_result;
                     }
-                    await Constants.AppDbContext.SaveChangesAsync();
+                    await AppShared.AppDbContext.SaveChangesAsync();
                 }
                 await m.Reply("登录成功!");
             }
             catch (Exception ex)
             {
                 m.TryReply(ex.Message);
-                Log.Error(ex, Constants.UnexpectedError);
+                Log.Error(ex, AppShared.UnexpectedError);
             }
 
         }
@@ -72,13 +69,13 @@ namespace ZhuZhuBot.Controllers
                 if (match.Groups[3].Success) return;
                 var phone = match.Groups[1].Value;
                 if (string.IsNullOrEmpty(phone)) return;
-                await Constants.CpdailyClient.MobileLoginAsync(phone, Constants.SecretKey);
+                await AppShared.CpdailyClient.MobileLoginAsync(phone, AppShared.SecretKey);
                 await m.Reply("已经发送短信验证码，请回复：“今日校园 登录 手机号码 验证码”，进行验证。");
             }
             catch (Exception ex)
             {
                 m.TryReply(ex.Message);
-                Log.Error(ex, Constants.UnexpectedError);
+                Log.Error(ex, AppShared.UnexpectedError);
             }
         }
 
@@ -94,17 +91,14 @@ namespace ZhuZhuBot.Controllers
                 var phone = match.Groups[1].Value;
                 var code = match.Groups[3].Value;
                 if (string.IsNullOrEmpty(phone)) return;
-                var login_result = await Constants.CpdailyClient.MobileLoginAsync(phone, code, Constants.SecretKey);
+                var login_result = await AppShared.CpdailyClient.MobileLoginAsync(phone, code, AppShared.SecretKey);
 
-                var user = Constants.AppDbContext.Users
-                    .Where(u => u.QId == m.GetQQ())
-                    .Include(u => u.CpdailyLoginResult)
-                    .FirstOrDefault();
+                var user = AppShared.AppDbContext.GetUserByQQ(m.GetSenderQQ());
                 if (user is null)
                 {
-                    Constants.AppDbContext.Users.Add(new User()
+                    AppShared.AppDbContext.Users.Add(new User()
                     {
-                        QId = m.GetQQ(),
+                        QId = m.GetSenderQQ(),
                         CpdailyLoginResult = new CpdailyLoginResult(login_result)
                     });
                 }
@@ -112,13 +106,13 @@ namespace ZhuZhuBot.Controllers
                 {
                     user.CpdailyLoginResult = new CpdailyLoginResult(login_result);
                 }
-                await Constants.AppDbContext.SaveChangesAsync();
+                await AppShared.AppDbContext.SaveChangesAsync();
                 await m.Reply("登录成功!");
             }
             catch (Exception ex)
             {
                 m.TryReply(ex.Message);
-                Log.Error(ex, Constants.UnexpectedError);
+                Log.Error(ex, AppShared.UnexpectedError);
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿#pragma warning disable CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑声明为可以为 null。
 using Microsoft.EntityFrameworkCore;
+using Mirai.Net.Data.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,12 +19,20 @@ namespace ZhuZhuBot
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
-                  => options.UseSqlite($"Data Source={Constants.DatabaseFilePath}");
+                  => options.UseSqlite($"Data Source={AppShared.DatabaseFilePath}");
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+        }
+
+        public User? GetUserByQQ(string m)
+        {
+            return Users
+                .Where(u => u.QId == m)
+                .Include(u => u.CpdailyLoginResult)
+                .FirstOrDefault();
         }
 
     }
