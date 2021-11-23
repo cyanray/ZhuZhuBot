@@ -22,13 +22,13 @@ namespace ZhuZhuBot.Controllers
                 var msg_str = m.MessageChain.GetAllPlainText();
                 if (string.IsNullOrEmpty(msg_str)) return;
                 if (msg_str != "图书馆" && msg_str != "我的预约") return;
-                DbModels.User? user = AppShared.AppDbContext.GetUserByQQ(m.GetSenderQQ());
+                var user = AppShared.AppDbContext.GetUserByQQ(m.GetSenderQQ());
                 if (user is null || !user.HasLoginResult)
                 {
                     await m.Reply(AppShared.NotLoginMessage);
                     return;
                 }
-                if (user.CpdailyLoginResult.SchoolAppCookie is null)
+                if (!user.CpdailyLoginResult.IsSchoolAppCookieValid)
                 {
                     var cookie = await AppShared.CpdailyClient.UserStoreAppListAsync(
                             user.CpdailyLoginResult.ToLoginResult(), AppShared.SchoolDetails);
@@ -74,7 +74,7 @@ namespace ZhuZhuBot.Controllers
                     await m.Reply(AppShared.NotLoginMessage);
                     return;
                 }
-                if (user.CpdailyLoginResult.SchoolAppCookie is null)
+                if (!user.CpdailyLoginResult.IsSchoolAppCookieValid)
                 {
                     var cookie = await AppShared.CpdailyClient.UserStoreAppListAsync(
                             user.CpdailyLoginResult.ToLoginResult(), AppShared.SchoolDetails);

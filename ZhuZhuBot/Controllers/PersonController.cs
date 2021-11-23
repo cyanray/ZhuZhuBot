@@ -58,7 +58,7 @@ namespace ZhuZhuBot.Controllers
                     await m.Reply(AppShared.NotLoginMessage);
                     return;
                 }
-                if (user.CpdailyLoginResult.SchoolAppCookie is null)
+                if (!user.CpdailyLoginResult.IsSchoolAppCookieValid)
                 {
                     var cookie = await AppShared.CpdailyClient.UserStoreAppListAsync(
                             user.CpdailyLoginResult.ToLoginResult(), AppShared.SchoolDetails);

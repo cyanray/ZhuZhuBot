@@ -1,6 +1,7 @@
 ﻿using Cpdaily.CpdailyModels;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
@@ -43,6 +44,21 @@ namespace ZhuZhuBot.DbModels
         {
             SchoolAppCookie = cookie;
             SchoolAppCookieUpdateTime = DateTime.Now;
+        }
+
+        /// <summary>
+        /// 检查 SchoolAppCookie 是否可用（为 null 或超过 2 天未更新则为不可用）
+        /// </summary>
+        [NotMapped]
+        [MemberNotNullWhen(true, nameof(SchoolAppCookie), nameof(SchoolAppCookieUpdateTime))]
+        public bool IsSchoolAppCookieValid
+        {
+            get
+            {
+                if (SchoolAppCookieUpdateTime is null) return false;
+                var diff = DateTime.Now - SchoolAppCookieUpdateTime;
+                return SchoolAppCookie is not null && diff is not null && diff.Value.Days <= 2;
+            }
         }
 
         public CpdailyLoginResult()
