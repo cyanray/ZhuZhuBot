@@ -96,11 +96,11 @@ namespace ZhuZhuBot
 
             bot.MessageReceived
                 .OfType<MessageReceiverBase>()
-                .Subscribe(async x =>
+                .Subscribe(async m =>
                 {
                     try
                     {
-                        var msg_str = x.MessageChain.GetAllPlainText();
+                        var msg_str = m.MessageChain.GetAllPlainText();
                         if (string.IsNullOrEmpty(msg_str)) return;
                         var match = Regex.Match(msg_str, @"今日校园[ ]*base64[ ]*([\S]+)");
                         if (!match.Success) return;
@@ -114,14 +114,14 @@ namespace ZhuZhuBot
                         else
                         {
                             var user = Constants.AppDbContext.Users
-                                    .Where(u => u.QId == x.GetQQ())
+                                    .Where(u => u.QId == m.GetQQ())
                                     .Include(u => u.CpdailyLoginResult)
                                     .FirstOrDefault();
                             if (user is null)
                             {
                                 Constants.AppDbContext.Users.Add(new User()
                                 {
-                                    QId = x.GetQQ(),
+                                    QId = m.GetQQ(),
                                     CpdailyLoginResult = login_result
                                 });
                             }
@@ -131,22 +131,22 @@ namespace ZhuZhuBot
                             }
                             await Constants.AppDbContext.SaveChangesAsync();
                         }
-                        await x.Reply("登录成功!");
+                        await m.Reply("登录成功!");
                     }
                     catch (Exception ex)
                     {
-                        x.TryReply(ex.Message);
+                        m.TryReply(ex.Message);
                         Log.Error(ex, Constants.UnexpectedError);
                     }
                 });
 
             bot.MessageReceived
                 .OfType<MessageReceiverBase>()
-                .Subscribe(async x =>
+                .Subscribe(async m =>
                 {
                     try
                     {
-                        var msg_str = x.MessageChain.GetAllPlainText();
+                        var msg_str = m.MessageChain.GetAllPlainText();
                         if (string.IsNullOrEmpty(msg_str)) return;
                         var match = Regex.Match(msg_str, @"今日校园[ ]*登录[ ]*(1(3\d|4[5-9]|5[0-35-9]|6[2567]|7[0-8]|8\d|9[0-35-9])\d{8})[ ]*([\d]+)?");
                         if (!match.Success) return;
@@ -154,22 +154,22 @@ namespace ZhuZhuBot
                         var phone = match.Groups[1].Value;
                         if (string.IsNullOrEmpty(phone)) return;
                         await Constants.CpdailyClient.MobileLoginAsync(phone, Constants.SecretKey);
-                        await x.Reply("已经发送短信验证码，请回复：“今日校园 登录 手机号码 验证码”，进行验证。");
+                        await m.Reply("已经发送短信验证码，请回复：“今日校园 登录 手机号码 验证码”，进行验证。");
                     }
                     catch (Exception ex)
                     {
-                        x.TryReply(ex.Message);
+                        m.TryReply(ex.Message);
                         Log.Error(ex, Constants.UnexpectedError);
                     }
                 });
 
             bot.MessageReceived
                 .OfType<MessageReceiverBase>()
-                .Subscribe(async x =>
+                .Subscribe(async m =>
                 {
                     try
                     {
-                        var msg_str = x.MessageChain.GetAllPlainText();
+                        var msg_str = m.MessageChain.GetAllPlainText();
                         if (string.IsNullOrEmpty(msg_str)) return;
                         var match = Regex.Match(msg_str, @"今日校园[ ]*登录[ ]*(1(3\d|4[5-9]|5[0-35-9]|6[2567]|7[0-8]|8\d|9[0-35-9])\d{8})[ ]*([\d]+)");
                         if (!match.Success) return;
@@ -179,14 +179,14 @@ namespace ZhuZhuBot
                         var login_result = await Constants.CpdailyClient.MobileLoginAsync(phone, code, Constants.SecretKey);
                         
                         var user = Constants.AppDbContext.Users
-                            .Where(u => u.QId == x.GetQQ())
+                            .Where(u => u.QId == m.GetQQ())
                             .Include(u => u.CpdailyLoginResult)
                             .FirstOrDefault();
                         if (user is null)
                         {
                             Constants.AppDbContext.Users.Add(new User()
                             {
-                                QId = x.GetQQ(),
+                                QId = m.GetQQ(),
                                 CpdailyLoginResult = new CpdailyLoginResult(login_result)
                             });
                         }
@@ -195,63 +195,63 @@ namespace ZhuZhuBot
                             user.CpdailyLoginResult = new CpdailyLoginResult(login_result);
                         }
                         await Constants.AppDbContext.SaveChangesAsync();
-                        await x.Reply("登录成功!");
+                        await m.Reply("登录成功!");
                     }
                     catch (Exception ex)
                     {
-                        x.TryReply(ex.Message);
+                        m.TryReply(ex.Message);
                         Log.Error(ex, Constants.UnexpectedError);
                     }
                 });
 
             bot.MessageReceived
                 .OfType<MessageReceiverBase>()
-                .Subscribe(async x =>
+                .Subscribe(async m =>
                 {
                     try
                     {
-                        var msg_str = x.MessageChain.GetAllPlainText();
+                        var msg_str = m.MessageChain.GetAllPlainText();
                         if (string.IsNullOrEmpty(msg_str)) return;
                         if (msg_str != "个人信息") return;
                         var user = Constants.AppDbContext.Users
                                 .AsNoTracking()
-                                .Where(u => u.QId == x.GetQQ())
+                                .Where(u => u.QId == m.GetQQ())
                                 .Include(u => u.CpdailyLoginResult)
                                 .FirstOrDefault();
                         if (user is null || user.CpdailyLoginResult is null)
                         {
-                            await x.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
+                            await m.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
                             return;
                         }
                         var user_info = await Constants.CpdailyClient.GetUserInfoAsync(user.CpdailyLoginResult.ToLoginResult());
                         if (user_info is not null)
                         {
-                            await x.Reply($"你好，{user_info.Name}！");
+                            await m.Reply($"你好，{user_info.Name}！");
                         }
                     }
                     catch (Exception ex)
                     {
-                        x.TryReply(ex.Message);
+                        m.TryReply(ex.Message);
                         Log.Error(ex, Constants.UnexpectedError);
                     }
                 });
 
             bot.MessageReceived
                 .OfType<MessageReceiverBase>()
-                .Subscribe(async x =>
+                .Subscribe(async m =>
                 {
                     try
                     {
-                        var msg_str = x.MessageChain.GetAllPlainText();
+                        var msg_str = m.MessageChain.GetAllPlainText();
                         if (string.IsNullOrEmpty(msg_str)) return;
                         if (msg_str != "余额" && msg_str != "一卡通" && msg_str != "一卡通余额") return;
                         var user = Constants.AppDbContext.Users
-                                .Where(u => u.QId == x.GetQQ())
+                                .Where(u => u.QId == m.GetQQ())
                                 .Include(u => u.CpdailyLoginResult)
                                 .FirstOrDefault();
                         if (user is null || user.CpdailyLoginResult is null)
                         {
-                            await x.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
+                            await m.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
                             return;
                         }
                         if (user.CpdailyLoginResult.SchoolAppCookie is null)
@@ -264,31 +264,31 @@ namespace ZhuZhuBot
                         var payClient = new NetPay();
                         var pay_cookie = await payClient.LoginAsync(user.CpdailyLoginResult.SchoolAppCookie);
                         var info = await payClient.GetAccountInfoAsync(pay_cookie);
-                        await x.Reply($"你的一卡通余额：￥{info.RemainingAmount} (待充值: ￥{info.UnaccountedAmount})");
+                        await m.Reply($"你的一卡通余额：￥{info.RemainingAmount} (待充值: ￥{info.UnaccountedAmount})");
                     }
                     catch (Exception ex)
                     {
-                        x.TryReply(ex.Message);
+                        m.TryReply(ex.Message);
                         Log.Error(ex, Constants.UnexpectedError);
                     }
                 });
 
             bot.MessageReceived
                 .OfType<MessageReceiverBase>()
-                .Subscribe(async x =>
+                .Subscribe(async m =>
                 {
                     try
                     {
-                        var msg_str = x.MessageChain.GetAllPlainText();
+                        var msg_str = m.MessageChain.GetAllPlainText();
                         if (string.IsNullOrEmpty(msg_str)) return;
                         if (msg_str != "图书馆" && msg_str != "我的预约") return;
                         var user = Constants.AppDbContext.Users
-                                .Where(u => u.QId == x.GetQQ())
+                                .Where(u => u.QId == m.GetQQ())
                                 .Include(u => u.CpdailyLoginResult)
                                 .FirstOrDefault();
                         if (user is null || user.CpdailyLoginResult is null)
                         {
-                            await x.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
+                            await m.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
                             return;
                         }
                         if (user.CpdailyLoginResult.SchoolAppCookie is null)
@@ -303,41 +303,41 @@ namespace ZhuZhuBot
                         var logs =  await library.GetReservationsAsync(lib_cookie);
                         if (logs.Count != 0)
                         {
-                            await x.Reply(logs.Select(x => new PlainMessage($"{x.Id}. {x.LibraryName}, {x.Date:yyyy-MM-dd}"))
+                            await m.Reply(logs.Select(x => new PlainMessage($"{x.Id}. {x.LibraryName}, {x.Date:yyyy-MM-dd}"))
                                               .Select(x => (MessageBase)x)
                                               .ToArray());
                         }
                         else
                         {
-                            await x.Reply("没有找到图书馆预约记录！");
+                            await m.Reply("没有找到图书馆预约记录！");
                         }
                     }
                     catch (Exception ex)
                     {
-                        x.TryReply(ex.Message);
+                        m.TryReply(ex.Message);
                         Log.Error(ex, Constants.UnexpectedError);
                     }
                 });
 
             bot.MessageReceived
                 .OfType<MessageReceiverBase>()
-                .Subscribe(async x =>
+                .Subscribe(async m =>
                 {
                     try
                     {
-                        var msg_str = x.MessageChain.GetAllPlainText();
+                        var msg_str = m.MessageChain.GetAllPlainText();
                         if (string.IsNullOrEmpty(msg_str)) return;
                         var match = Regex.Match(msg_str, @"预约图书馆[ ]*(南岸|双福)(馆)?");
                         if (!match.Success) return;
                         var lib_name = match.Groups[1].Value;
 
                         var user = Constants.AppDbContext.Users
-                                .Where(u => u.QId == x.GetQQ())
+                                .Where(u => u.QId == m.GetQQ())
                                 .Include(u => u.CpdailyLoginResult)
                                 .FirstOrDefault();
                         if (user is null || user.CpdailyLoginResult is null)
                         {
-                            await x.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
+                            await m.Reply("你尚未登录! 回复: “今日校园 登录 手机号码” 进行登录！");
                             return;
                         }
                         if (user.CpdailyLoginResult.SchoolAppCookie is null)
@@ -358,18 +358,18 @@ namespace ZhuZhuBot
                         var logs = await library.GetReservationsAsync(lib_cookie);
                         if (logs.Count != 0)
                         {
-                            await x.Reply(logs.Select(x => new PlainMessage($"{x.Id}. {x.LibraryName}, {x.Date:yyyy-MM-dd}"))
+                            await m.Reply(logs.Select(x => new PlainMessage($"{x.Id}. {x.LibraryName}, {x.Date:yyyy-MM-dd}"))
                                               .Select(x => (MessageBase)x)
                                               .ToArray());
                         }
                         else
                         {
-                            await x.Reply("没有找到图书馆预约记录！");
+                            await m.Reply("没有找到图书馆预约记录！");
                         }
                     }
                     catch (Exception ex)
                     {
-                        x.TryReply(ex.Message);
+                        m.TryReply(ex.Message);
                         Log.Error(ex, Constants.UnexpectedError);
                     }
                 });
