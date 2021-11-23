@@ -1,7 +1,11 @@
 ﻿using Mirai.Net.Data.Messages;
 using Mirai.Net.Data.Messages.Concretes;
 using Mirai.Net.Data.Messages.Receivers;
+using Mirai.Net.Sessions;
 using Mirai.Net.Sessions.Http.Managers;
+using System.Reactive.Linq;
+using System.Reflection;
+using ZhuZhuBot.Controllers;
 
 namespace ZhuZhuBot
 {
@@ -101,6 +105,29 @@ namespace ZhuZhuBot
                 await m.Reply(new PlainMessage(message));
             }
             catch { }
+        }
+
+        public static void AddAllMiraiMessageActions(this MiraiBot bot)
+        {
+            var assembly = Assembly.GetAssembly(typeof(IMiraiController));
+            if (assembly is null) return;
+            var miraiMessageActions = assembly
+                  .GetTypes()
+                  .SelectMany(t => t.GetMethods())
+                  .Where(m => m.GetCustomAttributes(typeof(MiraiMessageActionAttribute), false).Length > 0)
+                  .ToList();
+            if (miraiMessageActions == null) return;
+            foreach (var method in miraiMessageActions)
+            {
+                var messageType = method.GetParameters().Select(x => x.ParameterType).FirstOrDefault();
+                if (messageType == null) continue;
+                bot.MessageReceived
+                    .Where(x => messageType.IsAssignableFrom(x.GetType()))
+                    .Subscribe(x =>
+                    {
+                        method.Invoke(null, new object[] { x });
+                    });
+            }
         }
 
     }
