@@ -38,9 +38,10 @@ namespace ZhuZhuBot.Controllers
                 var library = new CpdailyLibrary();
                 var lib_cookie = await library.LoginAsync(user.CpdailyLoginResult.SchoolAppCookie);
                 var logs = await library.GetReservationsAsync(lib_cookie);
+                logs = logs.OrderBy(x => x.Date).ToList();
                 if (logs.Count != 0)
                 {
-                    await m.Reply(logs.Select(x => new PlainMessage($"{x.Id}. {x.LibraryName}, {x.Date:yyyy-MM-dd}"))
+                    await m.Reply(logs.Select(x => new PlainMessage($"{x.LibraryName}, {x.Date:yyyy-MM-dd}, {x.Id}\n"))
                                       .Select(x => (MessageBase)x)
                                       .ToArray());
                 }
@@ -90,9 +91,10 @@ namespace ZhuZhuBot.Controllers
                 }
                 await library.ReserveAsync(lib_cookie, $"{lib_name}馆", date);
                 var logs = await library.GetReservationsAsync(lib_cookie);
+                logs = logs.OrderBy(x => x.Date).ToList();
                 if (logs.Count != 0)
                 {
-                    await m.Reply(logs.Select(x => new PlainMessage($"{x.Id}. {x.LibraryName}, {x.Date:yyyy-MM-dd}\n"))
+                    await m.Reply(logs.Select(x => new PlainMessage($"{x.LibraryName}, {x.Date:yyyy-MM-dd}, {x.Id}\n"))
                                       .Select(x => (MessageBase)x)
                                       .ToArray());
                 }
@@ -135,6 +137,7 @@ namespace ZhuZhuBot.Controllers
                 var library = new CpdailyLibrary();
                 var lib_cookie = await library.LoginAsync(user.CpdailyLoginResult.SchoolAppCookie);
                 var logs = await library.GetReservationsAsync(lib_cookie);
+                logs = logs.OrderBy(x => x.Date).ToList();
                 if (logs.Count == 0)
                 {
                     await m.Reply("没有找到图书馆预约记录！");
@@ -157,7 +160,18 @@ namespace ZhuZhuBot.Controllers
                     return;
                 }
                 await library.CancelReservationsAsync(lib_cookie, log.Id);
-
+                logs = await library.GetReservationsAsync(lib_cookie);
+                logs = logs.OrderBy(x => x.Date).ToList();
+                if (logs.Count != 0)
+                {
+                    await m.Reply(logs.Select(x => new PlainMessage($"{x.LibraryName}, {x.Date:yyyy-MM-dd}, {x.Id}\n"))
+                                      .Select(x => (MessageBase)x)
+                                      .ToArray());
+                }
+                else
+                {
+                    await m.Reply("成功取消图书馆预约！");
+                }
             }
             catch (Exception ex)
             {
