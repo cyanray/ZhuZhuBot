@@ -68,6 +68,7 @@ namespace ZhuZhuBot
                     {
                         Console.WriteLine(ex.Message);
                     }
+                    await Task.Delay(1000);
                 }
             };
 
